@@ -12,39 +12,50 @@
 
 #include "PluginProcessor.h"
 
-struct LookAndFeel : juce::LookAndFeel_V4 {
-  void drawRotarySlider(juce::Graphics &, int x, int y, int width, int height,
-                        float sliderPosProportional, float rotaryStartAngle,
-                        float rotaryEndAngle, juce::Slider &) override{};
+struct LookAndFeel : juce::LookAndFeel_V4
+{
+  void drawRotarySlider(juce::Graphics&,
+                        int x,
+                        int y,
+                        int width,
+                        int height,
+                        float sliderPosProportional,
+                        float rotaryStartAngle,
+                        float rotaryEndAngle,
+                        juce::Slider&) override;
 };
 
-struct RotarySliderWithLabels : juce::Slider {
-  RotarySliderWithLabels(juce::RangedAudioParameter &rap,
-                         const juce::String &unitSuffix)
-      : juce::Slider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
-                     juce::Slider::TextEntryBoxPosition::NoTextBox),
-        param(&rap),
-        suffix(unitSuffix) {
+struct RotarySliderWithLabels : juce::Slider
+{
+  RotarySliderWithLabels(juce::RangedAudioParameter& rap,
+                         const juce::String& unitSuffix)
+    : juce::Slider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
+                   juce::Slider::TextEntryBoxPosition::NoTextBox)
+    , param(&rap)
+    , suffix(unitSuffix)
+  {
     setLookAndFeel(&lnf);
   }
   ~RotarySliderWithLabels() { setLookAndFeel(nullptr); }
 
-  void paint(juce::Graphics &g) override{};
+  void paint(juce::Graphics& g) override;
   juce::Rectangle<int> getSliderBounds() const;
   int getTextHeight() const { return 14; }
   juce::String getDisplayString() const;
 
- private:
+private:
   LookAndFeel lnf;
 
-  juce::RangedAudioParameter *param;
+  juce::RangedAudioParameter* param;
   juce::String suffix;
 };
 
-struct ResponseCurveComponent : juce::Component,
-                                juce::AudioProcessorParameter::Listener,
-                                juce::Timer {
-  ResponseCurveComponent(SimpleEqAudioProcessor &);
+struct ResponseCurveComponent
+  : juce::Component
+  , juce::AudioProcessorParameter::Listener
+  , juce::Timer
+{
+  ResponseCurveComponent(SimpleEqAudioProcessor&);
   ~ResponseCurveComponent();
 
   /** Receives a callback when a parameter has been changed.
@@ -74,7 +85,9 @@ struct ResponseCurveComponent : juce::Component,
      ChangeBroadcaster which you can respond to later on the message thread.
   */
   void parameterGestureChanged(int parameterIndex,
-                               bool gestureIsStarting) override {}
+                               bool gestureIsStarting) override
+  {
+  }
 
   /** The user-defined callback routine that actually gets called periodically.
 
@@ -83,45 +96,44 @@ callback to change the subsequent intervals.
 */
   void timerCallback() override;
 
-  void paint(juce::Graphics &) override;
+  void paint(juce::Graphics&) override;
 
- private:
-  SimpleEqAudioProcessor &audioProcessor;
-  juce::Atomic<bool> parametersChanged{false};
+private:
+  SimpleEqAudioProcessor& audioProcessor;
+  juce::Atomic<bool> parametersChanged{ false };
   MonoChain monoChain;
 };
 
 //==============================================================================
 /**
  */
-class SimpleEqAudioProcessorEditor : public juce::AudioProcessorEditor {
- public:
-  SimpleEqAudioProcessorEditor(SimpleEqAudioProcessor &);
+class SimpleEqAudioProcessorEditor : public juce::AudioProcessorEditor
+{
+public:
+  SimpleEqAudioProcessorEditor(SimpleEqAudioProcessor&);
   ~SimpleEqAudioProcessorEditor() override;
 
   //==============================================================================
-  void paint(juce::Graphics &) override;
+  void paint(juce::Graphics&) override;
   void resized() override;
 
- private:
+private:
   // This reference is provided as a quick way for your editor to
   // access the processor object that created it.
-  SimpleEqAudioProcessor &audioProcessor;
+  SimpleEqAudioProcessor& audioProcessor;
 
   RotarySliderWithLabels peakFreqSlider, peakGainSlider, peakQualitySlider,
-      lowCutFreqSlider, highCutFreqSlider, lowCutSlopeSlider,
-      highCutSlopeSlider;
+    lowCutFreqSlider, highCutFreqSlider, lowCutSlopeSlider, highCutSlopeSlider;
 
   ResponseCurveComponent responseCurveComponent;
 
   using APVTS = juce::AudioProcessorValueTreeState;
   using Attachment = APVTS::SliderAttachment;
   Attachment peakFreqSliderAttachment, peakGainSliderAttachment,
-      peakQualitySliderAttachment, lowCutFreqSliderAttachment,
-      highCutFreqSliderAttachment, lowCutSlopeAttachment,
-      highCutSlopeAttachment;
+    peakQualitySliderAttachment, lowCutFreqSliderAttachment,
+    highCutFreqSliderAttachment, lowCutSlopeAttachment, highCutSlopeAttachment;
 
-  std::vector<juce::Component *> getComps();
+  std::vector<juce::Component*> getComps();
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SimpleEqAudioProcessorEditor)
 };
