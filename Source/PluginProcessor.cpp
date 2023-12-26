@@ -74,7 +74,7 @@ const juce::String SimpleEqAudioProcessor::getProgramName(int index) {
 }
 
 void SimpleEqAudioProcessor::changeProgramName(int index,
-                                               const juce::String &newName) {}
+                                               const juce::String& newName) {}
 
 //==============================================================================
 void SimpleEqAudioProcessor::prepareToPlay(double sampleRate,
@@ -99,7 +99,7 @@ void SimpleEqAudioProcessor::releaseResources() {
 
 #ifndef JucePlugin_PreferredChannelConfigurations
 bool SimpleEqAudioProcessor::isBusesLayoutSupported(
-    const BusesLayout &layouts) const {
+    const BusesLayout& layouts) const {
 #if JucePlugin_IsMidiEffect
   juce::ignoreUnused(layouts);
   return true;
@@ -123,8 +123,8 @@ bool SimpleEqAudioProcessor::isBusesLayoutSupported(
 }
 #endif
 
-void SimpleEqAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
-                                          juce::MidiBuffer &midiMessages) {
+void SimpleEqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
+                                          juce::MidiBuffer& midiMessages) {
   juce::ScopedNoDenormals noDenormals;
   auto totalNumInputChannels = getTotalNumInputChannels();
   auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -170,13 +170,13 @@ bool SimpleEqAudioProcessor::hasEditor() const {
   return true;  // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor *SimpleEqAudioProcessor::createEditor() {
+juce::AudioProcessorEditor* SimpleEqAudioProcessor::createEditor() {
   return new SimpleEqAudioProcessorEditor(*this);
   // return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
-void SimpleEqAudioProcessor::getStateInformation(juce::MemoryBlock &destData) {
+void SimpleEqAudioProcessor::getStateInformation(juce::MemoryBlock& destData) {
   // You should use this method to store your parameters in the memory block.
   // You could do that either as raw data, or use the XML or ValueTree classes
   // as intermediaries to make it easy to save and load complex data.
@@ -184,7 +184,7 @@ void SimpleEqAudioProcessor::getStateInformation(juce::MemoryBlock &destData) {
   apvts.state.writeToStream(mos);
 }
 
-void SimpleEqAudioProcessor::setStateInformation(const void *data,
+void SimpleEqAudioProcessor::setStateInformation(const void* data,
                                                  int sizeInBytes) {
   // You should use this method to restore your parameters from this memory
   // block, whose contents will have been created by the getStateInformation()
@@ -196,7 +196,7 @@ void SimpleEqAudioProcessor::setStateInformation(const void *data,
   }
 }
 
-ChainSettings getChainSettings(juce::AudioProcessorValueTreeState &apvts) {
+ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts) {
   ChainSettings settings;
 
   settings.lowCutFreq = apvts.getRawParameterValue("LowCut Freq")->load();
@@ -212,7 +212,7 @@ ChainSettings getChainSettings(juce::AudioProcessorValueTreeState &apvts) {
 }
 
 void SimpleEqAudioProcessor::updatePeakFilter(
-    const ChainSettings &chainSettings) {
+    const ChainSettings& chainSettings) {
   auto peakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
       getSampleRate(), chainSettings.peakFreq, chainSettings.peakQuality,
       juce::Decibels::decibelsToGain(chainSettings.peakGainInDecibles));
@@ -224,33 +224,33 @@ void SimpleEqAudioProcessor::updatePeakFilter(
 }
 
 void SimpleEqAudioProcessor::updateCoefficients(
-    Coefficients &old, const Coefficients &replacements) {
+    Coefficients& old, const Coefficients& replacements) {
   *old = *replacements;
 }
 
 void SimpleEqAudioProcessor::updateLowCutFilters(
-    const ChainSettings &chainSettings) {
+    const ChainSettings& chainSettings) {
   auto cutCoefficients = juce::dsp::FilterDesign<float>::
       designIIRHighpassHighOrderButterworthMethod(
           chainSettings.lowCutFreq, getSampleRate(),
           2 * (chainSettings.lowCutSlope + 1));
 
-  auto &leftLowCut = leftChain.get<ChainPositions::LowCut>();
-  auto &rightLowCut = rightChain.get<ChainPositions::LowCut>();
+  auto& leftLowCut = leftChain.get<ChainPositions::LowCut>();
+  auto& rightLowCut = rightChain.get<ChainPositions::LowCut>();
 
   updateCutFilter(leftLowCut, cutCoefficients, chainSettings.lowCutSlope);
   updateCutFilter(rightLowCut, cutCoefficients, chainSettings.lowCutSlope);
 }
 
 void SimpleEqAudioProcessor::updateHighCutFilters(
-    const ChainSettings &chainSettings) {
+    const ChainSettings& chainSettings) {
   auto highCutCoefficients = juce::dsp::FilterDesign<float>::
       designIIRLowpassHighOrderButterworthMethod(
           chainSettings.highCutFreq, getSampleRate(),
           2 * (chainSettings.highCutSlope + 1));
 
-  auto &leftHighCut = leftChain.get<ChainPositions::HighCut>();
-  auto &rightHighCut = rightChain.get<ChainPositions::HighCut>();
+  auto& leftHighCut = leftChain.get<ChainPositions::HighCut>();
+  auto& rightHighCut = rightChain.get<ChainPositions::HighCut>();
 
   updateCutFilter(leftHighCut, highCutCoefficients, chainSettings.highCutSlope);
   updateCutFilter(rightHighCut, highCutCoefficients,
@@ -303,6 +303,6 @@ SimpleEqAudioProcessor::createParameterLayout() {
 
 //==============================================================================
 // This creates new instances of the plugin..
-juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() {
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
   return new SimpleEqAudioProcessor();
 }

@@ -36,7 +36,14 @@ class SimpleEqAudioProcessorEditor : public juce::AudioProcessorEditor {
   SimpleEqAudioProcessor &audioProcessor;
 
   CustomRotarySlider peakFreqSlider, peakGainSlider, peakQualitySlider,
-      lowCutFreqSlider, highCutFreqSlider;
+      lowCutFreqSlider, highCutFreqSlider, lowCutSlope, highCutSlope;
+
+  using APVTS = juce::AudioProcessorValueTreeState;
+  using Attachment = APVTS::SliderAttachment;
+  Attachment peakFreqSliderAttachment, peakGainSliderAttachment,
+      peakQualitySliderAttachment, lowCutFreqSliderAttachment,
+      highCutFreqSliderAttachment, lowCutSlopeAttachment,
+      highCutSlopeAttachment;
 
   std::vector<juce::Component *> getComps();
 
