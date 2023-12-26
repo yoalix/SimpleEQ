@@ -18,30 +18,22 @@ struct CustomRotarySlider : juce::Slider {
                      juce::Slider::TextEntryBoxPosition::NoTextBox) {}
 };
 
-//==============================================================================
-/**
- */
-class SimpleEqAudioProcessorEditor : public juce::AudioProcessorEditor,
-                                     juce::AudioProcessorParameter::Listener,
-                                     juce::Timer {
- public:
-  SimpleEqAudioProcessorEditor(SimpleEqAudioProcessor &);
-  ~SimpleEqAudioProcessorEditor() override;
-
-  //==============================================================================
-  void paint(juce::Graphics &) override;
-  void resized() override;
+struct ResponseCurveComponent : juce::Component,
+                                juce::AudioProcessorParameter::Listener,
+                                juce::Timer {
+  ResponseCurveComponent(SimpleEqAudioProcessor &);
+  ~ResponseCurveComponent();
 
   /** Receives a callback when a parameter has been changed.
 
-            IMPORTANT NOTE: This will be called synchronously when a parameter
-     changes, and many audio processors will change their parameter during their
-     audio callback. This means that not only has your handler code got to be
-     completely thread-safe, but it's also got to be VERY fast, and avoid
-     blocking. If you need to handle this event on your message thread, use this
-     callback to trigger an AsyncUpdater or ChangeBroadcaster which you can
-     respond to on the message thread.
-        */
+          IMPORTANT NOTE: This will be called synchronously when a parameter
+   changes, and many audio processors will change their parameter during their
+   audio callback. This means that not only has your handler code got to be
+   completely thread-safe, but it's also got to be VERY fast, and avoid
+   blocking. If you need to handle this event on your message thread, use this
+   callback to trigger an AsyncUpdater or ChangeBroadcaster which you can
+   respond to on the message thread.
+      */
   void parameterValueChanged(int parameterIndex, float newValue) override;
 
   /** Indicates that a parameter change gesture has started.
@@ -68,15 +60,35 @@ callback to change the subsequent intervals.
 */
   void timerCallback() override;
 
+  void paint(juce::Graphics &) override;
+
+ private:
+  SimpleEqAudioProcessor &audioProcessor;
+  juce::Atomic<bool> parametersChanged{false};
+  MonoChain monoChain;
+};
+
+//==============================================================================
+/**
+ */
+class SimpleEqAudioProcessorEditor : public juce::AudioProcessorEditor {
+ public:
+  SimpleEqAudioProcessorEditor(SimpleEqAudioProcessor &);
+  ~SimpleEqAudioProcessorEditor() override;
+
+  //==============================================================================
+  void paint(juce::Graphics &) override;
+  void resized() override;
+
  private:
   // This reference is provided as a quick way for your editor to
   // access the processor object that created it.
   SimpleEqAudioProcessor &audioProcessor;
 
-  juce::Atomic<bool> parametersChanged{false};
-
   CustomRotarySlider peakFreqSlider, peakGainSlider, peakQualitySlider,
       lowCutFreqSlider, highCutFreqSlider, lowCutSlope, highCutSlope;
+
+  ResponseCurveComponent responseCurveComponent;
 
   using APVTS = juce::AudioProcessorValueTreeState;
   using Attachment = APVTS::SliderAttachment;
@@ -86,8 +98,6 @@ callback to change the subsequent intervals.
       highCutSlopeAttachment;
 
   std::vector<juce::Component *> getComps();
-
-  MonoChain monoChain;
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SimpleEqAudioProcessorEditor)
 };
