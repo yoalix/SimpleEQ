@@ -106,12 +106,19 @@ callback to change the subsequent intervals.
 
   void paint(juce::Graphics&) override;
 
+  void resized() override;
+
 private:
   SimpleEqAudioProcessor& audioProcessor;
   juce::Atomic<bool> parametersChanged{ false };
   MonoChain monoChain;
 
   void updateChain();
+
+  juce::Image background;
+
+  juce::Rectangle<int> getRenderArea();
+  juce::Rectangle<int> getAnalysisArea();
 };
 
 //==============================================================================
