@@ -179,8 +179,10 @@ ResponseCurveComponent::ResponseCurveComponent(SimpleEqAudioProcessor& p)
     param->addListener(this);
   }
 
+  updateChain();
   startTimerHz(60);
 };
+
 ResponseCurveComponent::~ResponseCurveComponent()
 {
   const auto& params = audioProcessor.getParameters();
@@ -200,28 +202,34 @@ void
 ResponseCurveComponent::timerCallback()
 {
   if (parametersChanged.compareAndSetBool(false, true)) {
-    // update monochain
-    auto chainSettings = getChainSettings(audioProcessor.apvts);
-
-    auto peakCoefficients =
-      makePeakFilter(chainSettings, audioProcessor.getSampleRate());
-    updateCoefficients(monoChain.get<ChainPositions::Peak>().coefficients,
-                       peakCoefficients);
-
-    auto lowCutCoefficients =
-      makeLowCutFilter(chainSettings, audioProcessor.getSampleRate());
-    auto highCutCoefficients =
-      makeHighCutFilter(chainSettings, audioProcessor.getSampleRate());
-
-    updateCutFilter(monoChain.get<ChainPositions::LowCut>(),
-                    lowCutCoefficients,
-                    chainSettings.lowCutSlope);
-    updateCutFilter(monoChain.get<ChainPositions::HighCut>(),
-                    highCutCoefficients,
-                    chainSettings.highCutSlope);
+    updateChain();
     // signal a repaint
     repaint();
   }
+}
+
+void
+ResponseCurveComponent::updateChain()
+{
+  // update monochain
+  auto chainSettings = getChainSettings(audioProcessor.apvts);
+
+  auto peakCoefficients =
+    makePeakFilter(chainSettings, audioProcessor.getSampleRate());
+  updateCoefficients(monoChain.get<ChainPositions::Peak>().coefficients,
+                     peakCoefficients);
+
+  auto lowCutCoefficients =
+    makeLowCutFilter(chainSettings, audioProcessor.getSampleRate());
+  auto highCutCoefficients =
+    makeHighCutFilter(chainSettings, audioProcessor.getSampleRate());
+
+  updateCutFilter(monoChain.get<ChainPositions::LowCut>(),
+                  lowCutCoefficients,
+                  chainSettings.lowCutSlope);
+  updateCutFilter(monoChain.get<ChainPositions::HighCut>(),
+                  highCutCoefficients,
+                  chainSettings.highCutSlope);
 }
 
 void
