@@ -327,8 +327,7 @@ ResponseCurveComponent::resized()
 
   Graphics g(background);
 
-  Array<float> freqs{ 20,  30,   40,   50,   100,  200,  300,   400,
-                      500, 1000, 2000, 3000, 4000, 5000, 10000, 20000 };
+  Array<float> freqs{ 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000 };
   auto renderArea = getAnalysisArea();
   auto left = renderArea.getX();
   auto right = renderArea.getRight();
@@ -357,6 +356,61 @@ ResponseCurveComponent::resized()
     g.drawHorizontalLine(y, float(left), float(right));
   }
   g.drawRect(getAnalysisArea());
+  g.setColour(Colours::lightgrey);
+  const int fontHeight = 10;
+  g.setFont(fontHeight);
+  for (int i = 0; i < freqs.size(); i++) {
+    auto f = freqs[i];
+    auto x = xs[i];
+
+    bool addK = false;
+    String str;
+    if (f > 999.f) {
+      addK = true;
+      f /= 1000.f;
+    }
+    str << f;
+    if (addK)
+      str << "k";
+    str << "Hz";
+
+    auto textWidth = g.getCurrentFont().getStringWidth(str);
+
+    Rectangle<int> r;
+    r.setSize(textWidth, fontHeight);
+    r.setCentre(x, 0);
+    r.setY(1);
+
+    g.drawFittedText(str, r, juce::Justification::centred, 1);
+  }
+
+  for (auto gDb : gain) {
+    auto y = jmap(gDb, -24.f, 24.f, float(bottom), float(top));
+
+    String str;
+    if (gDb > 0) {
+      str << "+";
+    }
+    str << gDb;
+
+    auto textWidth = g.getCurrentFont().getStringWidth(str);
+
+    Rectangle<int> r;
+    r.setSize(textWidth, fontHeight);
+    r.setX(getWidth() - textWidth);
+    r.setCentre(r.getCentreX(), y);
+
+    g.setColour(gDb == 0.f ? Colour(255u, 195u, 63u) : Colours::lightgrey);
+    g.drawFittedText(str, r, juce::Justification::centred, 1);
+
+    str.clear();
+    str << (gDb - 24.f);
+    r.setX(1);
+    textWidth = g.getCurrentFont().getStringWidth(str);
+    r.setSize(textWidth, fontHeight);
+    g.setColour(Colours::lightgrey);
+    g.drawFittedText(str, r, juce::Justification::centred, 1);
+  }
 }
 
 juce::Rectangle<int>
@@ -447,8 +501,8 @@ SimpleEqAudioProcessorEditor::~SimpleEqAudioProcessorEditor() {}
 void
 SimpleEqAudioProcessorEditor::paint(juce::Graphics& g)
 {
-  // (Our component is opaque, so we must completely fill the background with a
-  // solid colour)
+  // (Our component is opaque, so we must completely fill the background with
+  // a solid colour)
   using namespace juce;
 
   g.fillAll(Colour(20u, 20u, 28u));
