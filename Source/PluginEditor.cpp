@@ -24,7 +24,7 @@ LookAndFeel::drawRotarySlider(juce::Graphics& g,
   using namespace juce;
   auto bounds = Rectangle<float>(x, y, width, height);
 
-  g.setColour(Colour(0u, 100u, 100u));
+  g.setColour(Colour(45u, 96u, 105u));
   g.fillEllipse(bounds);
 
   g.setColour(Colour(58u, 245u, 245u));
@@ -62,7 +62,7 @@ LookAndFeel::drawRotarySlider(juce::Graphics& g,
     r.setSize(strWidth + 4, rswl->getTextHeight() + 2);
     r.setCentre(bounds.getCentre());
 
-    g.setColour(Colours::black);
+    g.setColour(Colour(13u, 13u, 18u));
     g.fillRect(r);
 
     g.setColour(Colours::white);
@@ -98,6 +98,30 @@ RotarySliderWithLabels::paint(juce::Graphics& g)
     startAng,
     endAng,
     *this);
+
+  auto center = sliderBounds.toFloat().getCentre();
+  auto radius = sliderBounds.getWidth() * 0.5f;
+
+  g.setColour(Colour(255u, 195u, 63u));
+  g.setFont(getTextHeight());
+  auto numChoices = labels.size();
+  for (int i = 0; i < numChoices; i++) {
+    auto pos = labels[i].pos;
+    jassert(0.f <= pos);
+    jassert(pos <= 1.f);
+
+    auto ang = jmap(pos, 0.f, 1.f, startAng, endAng);
+    auto c =
+      center.getPointOnCircumference(radius + getTextHeight() * 0.5f + 1, ang);
+
+    Rectangle<float> r;
+    auto str = labels[i].label;
+    r.setSize(g.getCurrentFont().getStringWidth(str), getTextHeight());
+    r.setCentre(c);
+    r.setY(r.getY() + getTextHeight());
+
+    g.drawFittedText(str, r.toNearestInt(), juce::Justification::centred, 1);
+  }
 }
 
 juce::Rectangle<int>
@@ -320,6 +344,27 @@ SimpleEqAudioProcessorEditor::SimpleEqAudioProcessorEditor(
 {
   // Make sure that before the constructor has finished, you've set the
   // editor's size to whatever you need it to be.
+
+  peakFreqSlider.labels.add({ 0.f, "20Hz" });
+  peakFreqSlider.labels.add({ 1.f, "20kHz" });
+
+  peakGainSlider.labels.add({ 0.f, "-24dB" });
+  peakGainSlider.labels.add({ 1.f, "24dB" });
+
+  peakQualitySlider.labels.add({ 0.f, "0.1" });
+  peakQualitySlider.labels.add({ 1.f, "10.0" });
+
+  lowCutFreqSlider.labels.add({ 0.f, "20Hz" });
+  lowCutFreqSlider.labels.add({ 1.f, "20kHz" });
+
+  highCutFreqSlider.labels.add({ 0.f, "20Hz" });
+  highCutFreqSlider.labels.add({ 1.f, "20kHz" });
+
+  lowCutSlopeSlider.labels.add({ 0.f, "20Hz" });
+  lowCutSlopeSlider.labels.add({ 1.f, "20kHz" });
+  lowCutSlopeSlider.labels.add({ 0.f, "20Hz" });
+  lowCutSlopeSlider.labels.add({ 1.f, "20kHz" });
+
   for (auto* comp : getComps()) {
     addAndMakeVisible(comp);
   }
@@ -336,7 +381,7 @@ SimpleEqAudioProcessorEditor::paint(juce::Graphics& g)
   // solid colour)
   using namespace juce;
 
-  g.fillAll(Colours::black);
+  g.fillAll(Colour(20u, 20u, 28u));
 }
 
 void
@@ -345,9 +390,12 @@ SimpleEqAudioProcessorEditor::resized()
   // This is generally where you'll want to lay out the positions of any
   // subcomponents in your editor..
   auto bounds = getLocalBounds();
-  auto responseArea = bounds.removeFromTop(bounds.getHeight() * 0.33);
+  float hRatio = 25.f / 100.f;
+  auto responseArea = bounds.removeFromTop(bounds.getHeight() * hRatio);
 
   responseCurveComponent.setBounds(responseArea);
+
+  bounds.removeFromTop(10);
 
   auto lowCutArea = bounds.removeFromLeft(bounds.getWidth() * 0.33);
   auto highCutArea = bounds.removeFromRight(bounds.getWidth() * 0.5);
