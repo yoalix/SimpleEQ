@@ -41,12 +41,12 @@ struct FFTDataGenerator
     int numBins = (int)fftSize / 2;
 
     // normalize the fft values
-    for (int i = 0; i < numBins; i++) {
+    for (int i = 0; i < numBins; ++i) {
       fftData[i] /= (float)numBins;
     }
 
     // conver them to decibels
-    for (int i = 0; i < numBins; i++) {
+    for (int i = 0; i < numBins; ++i) {
       fftData[i] = juce::Decibels::gainToDecibels(fftData[i], negativeInfinity);
     }
 
@@ -58,10 +58,11 @@ struct FFTDataGenerator
     // when we change the order, recreate the window, forwardFFT, fifo, and
     // fftData
     // with new size
+    order = newOrder;
     auto fftSize = getFFTSize();
-    forwardFFT = std::make_unique<juce::dsp::FFT>(newOrder);
+    forwardFFT = std::make_unique<juce::dsp::FFT>(order);
     window = std::make_unique<juce::dsp::WindowingFunction<float>>(
-      fftSize, juce::dsp::WindowingFunction<float>::hann);
+      fftSize, juce::dsp::WindowingFunction<float>::blackmanHarris);
     fftData.clear();
     fftData.resize(fftSize * 2, 0);
     fftDataFifo.prepare(fftData.size());
@@ -102,7 +103,7 @@ struct AnalyzerPathGenerator
     int numBins = (int)fftSize / 2;
 
     PathType p;
-    p.preallocateSpace(numBins * 2);
+    p.preallocateSpace(3 * (int)width);
     auto map = [bottom, top, negativeInfinity](float v) {
       return juce::jmap(v, negativeInfinity, 0.f, float(bottom), top);
     };
@@ -122,7 +123,7 @@ struct AnalyzerPathGenerator
 
       if (!std::isnan(y) && !std::isinf(y)) {
         auto binFreq = binNum * binWidth;
-        auto normalizedBinX = juce::mapFromLog10(binFreq, 1.f, 20000.f);
+        auto normalizedBinX = juce::mapFromLog10(binFreq, 20.f, 20000.f);
         auto binX = std::floor(width * normalizedBinX);
         p.lineTo(binX, y);
       }
@@ -187,6 +188,28 @@ private:
   juce::String suffix;
 };
 
+struct PathProducer
+{
+  PathProducer(SingleChannelSampleFifo<SimpleEqAudioProcessor::BlockType>& scsf)
+    : leftChannelFifo(&scsf)
+  {
+    leftChannelFFTDataGenerator.changeOrder(FFTOrder::order2048);
+    monoBuffer.setSize(1, leftChannelFFTDataGenerator.getFFTSize());
+  }
+  void process(juce::Rectangle<float> fftBounds, double sampleRate);
+  juce::Path getPath() { return leftChannelFFTPath; }
+
+private:
+  SingleChannelSampleFifo<SimpleEqAudioProcessor::BlockType>* leftChannelFifo;
+  juce::AudioBuffer<float> monoBuffer;
+
+  FFTDataGenerator<std::vector<float>> leftChannelFFTDataGenerator;
+
+  AnalyzerPathGenerator<juce::Path> pathProducer;
+
+  juce::Path leftChannelFFTPath;
+};
+
 struct ResponseCurveComponent
   : juce::Component
   , juce::AudioProcessorParameter::Listener
@@ -249,14 +272,7 @@ private:
   juce::Rectangle<int> getRenderArea();
   juce::Rectangle<int> getAnalysisArea();
 
-  SingleChannelSampleFifo<SimpleEqAudioProcessor::BlockType>* leftChannelFifo;
-  juce::AudioBuffer<float> monoBuffer;
-
-  FFTDataGenerator<std::vector<float>> leftChannelFFTDataGenerator;
-
-  AnalyzerPathGenerator<juce::Path> pathProducer;
-
-  juce::Path leftChannelFFTPath;
+  PathProducer leftPathProducer, rightPathProducer;
 };
 
 //==============================================================================

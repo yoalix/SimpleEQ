@@ -68,8 +68,8 @@ private:
 
 enum Channel
 {
-  Right, // effectively 1
-  Left,  // effectively 0
+  Right, // effectively 0
+  Left,  // effectively 1
 };
 
 template<typename BlockType>
@@ -87,7 +87,7 @@ struct SingleChannelSampleFifo
     jassert(buffer.getNumChannels() > channelToUse);
     auto* channelPtr = buffer.getReadPointer(channelToUse);
 
-    for (int i = 0; i < buffer.getNumSamples(); i++) {
+    for (int i = 0; i < buffer.getNumSamples(); ++i) {
       pushNextSampleIntoFifo(channelPtr[i]);
     }
   }
@@ -296,6 +296,8 @@ private:
   void updateHighCutFilters(const ChainSettings& chainSettings);
 
   void updateFilters();
+
+  juce::dsp::Oscillator<float> osc;
   //==============================================================================
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SimpleEqAudioProcessor)
 };

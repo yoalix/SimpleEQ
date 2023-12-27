@@ -120,6 +120,11 @@ SimpleEqAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
   leftChannelFifo.prepare(samplesPerBlock);
   rightChannelFifo.prepare(samplesPerBlock);
+
+  osc.initialise([](float x) { return std::sin(x); });
+
+  spec.numChannels = getTotalNumOutputChannels();
+  osc.prepare(spec);
 }
 
 void
